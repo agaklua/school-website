@@ -1,0 +1,20 @@
+import Link from "next/link";
+import { requirePermission } from "../../../../lib/supabase/admin";
+import { PortalFrame } from "../../portal-frame";
+export default async function Students({ searchParams }: { searchParams: Promise<{ saved?: string; photo?: string; q?: string; page?: string; sort?: string }> }) {
+  const { supabase, profile } = await requirePermission("students.manage");
+  const { saved, photo, q = "", page: rawPage = "1", sort = "created_at" } = await searchParams;
+  const page = /^\d+$/.test(rawPage) ? Math.max(1,Math.min(10000,Number(rawPage))) : 1;
+  const safeQuery = q.trim().slice(0,80).replace(/[^a-zA-Z0-9\s/-]/g," ");
+  const sortColumn = ["created_at","full_name","admission_number","admission_date"].includes(sort) ? sort : "created_at";
+  let query = supabase.from("students").select("id,admission_number,full_name,school_level,enrollment_status,admission_date,school_classes(name)",{count:"exact"});
+  if (safeQuery) query = query.or(`full_name.ilike.%${safeQuery}%,admission_number.ilike.%${safeQuery}%`);
+  const { data, error, count } = await query.order(sortColumn,{ascending:sortColumn==="full_name"||sortColumn==="admission_number"}).range((page-1)*25,page*25-1);
+  const levelLabel: Record<string,string> = { baby_class:"Baby class", kindergarten:"Kindergarten", primary:"Primary", secondary:"Secondary" };
+  return <PortalFrame title="Student Management" name={profile.display_name || "Administrator"} role="Administrator"><div className="page-title-row"><div><span className="eyebrow">SCHOOL RECORDS</span><p>Registration records and current enrollment.</p></div><Link className="button button-gold" href="/portal/admin/students/new">Register student</Link></div>
+    {saved && <p role="status" className="form-success">Student record created successfully.{photo ? " The photo could not be uploaded; you can add it later." : ""}</p>}
+    {error && <p role="alert" className="form-error">Student records could not be loaded. Apply migration 004 and check your role permissions.</p>}
+    <form className="student-search" method="get"><label>Search by student name or admission number<input name="q" value={q} maxLength={80} placeholder="Search student records"/></label><label>Sort by<select name="sort" defaultValue={sort}><option value="created_at">Recently added</option><option value="full_name">Student name</option><option value="admission_number">Admission number</option><option value="admission_date">Admission date</option></select></label><button className="button button-gold">Search</button></form>
+    {!error && data?.length ? <><div className="table-wrap"><table className="data-table"><thead><tr><th>Admission number</th><th>Student</th><th>Level</th><th>Class</th><th>Status</th><th>Admission date</th></tr></thead><tbody>{data.map(student=><tr key={student.id}><td>{student.admission_number}</td><td>{student.full_name}</td><td>{levelLabel[student.school_level] ?? student.school_level}</td><td>{Array.isArray(student.school_classes) ? student.school_classes[0]?.name ?? "—" : (student.school_classes as {name?:string}|null)?.name ?? "—"}</td><td><span className="status-pill">{student.enrollment_status}</span></td><td>{new Date(`${student.admission_date}T00:00:00`).toLocaleDateString()}</td></tr>)}</tbody></table></div><div className="pagination"><span>{count ?? 0} records · Page {page} of {Math.max(1,Math.ceil((count??0)/25))}</span><div>{page>1&&<Link href={`/portal/admin/students?q=${encodeURIComponent(q)}&sort=${sort}&page=${page-1}`}>← Previous</Link>}{page*25<(count??0)&&<Link href={`/portal/admin/students?q=${encodeURIComponent(q)}&sort=${sort}&page=${page+1}`}>Next →</Link>}</div></div></> : !error ? <div className="portal-empty"><h2>{safeQuery ? "No matching students" : "No student records yet"}</h2><p>{safeQuery ? "Try a different name or admission number." : "Register a student to begin building the school’s enrollment records."}</p><Link className="button button-gold" href="/portal/admin/students/new">Register student</Link></div> : null}
+  </PortalFrame>;
+}

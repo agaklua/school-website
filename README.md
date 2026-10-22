@@ -85,4 +85,3 @@ This project has not been deployed. A Vercel deployment should follow the backen
 The confirmed public contact defaults are achiermjohnsla@gmail.com and +211 926 100 446. Administrators can replace these values in school settings. Added the supplied school staff event photograph and student group photograph to the gallery; the staff image is also shown on School Leadership. The supplied student group photograph is identified generally and is not described as nursery pupils. A nursery-specific photograph was not included among the supplied images.
 
 
-

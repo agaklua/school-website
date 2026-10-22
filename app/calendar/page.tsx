@@ -1,0 +1,5 @@
+import type { Metadata } from "next";
+import { InfoPage } from "../content";
+import {getUpcomingEvents} from "../../lib/events";
+export const metadata:Metadata={title:"School calendar"};
+export default async function Calendar(){const events=await getUpcomingEvents(100);return <InfoPage label="DATES & EVENTS" title="School calendar." text="Term dates and upcoming events from St. Lawrence Academy.">{events.length?<div className="calendar-list">{events.map(e=><article key={e.id}><time dateTime={e.starts_at}><b>{new Date(e.starts_at).toLocaleDateString("en-GB",{day:"2-digit",timeZone:"Africa/Juba"})}</b><span>{new Date(e.starts_at).toLocaleDateString("en-GB",{month:"short",year:"numeric",timeZone:"Africa/Juba"})}</span></time><div><h2>{e.title}</h2><p>{e.summary}</p>{e.location&&<small>{e.location}</small>}</div></article>)}</div>:<div className="empty-content"><h2>Calendar updates will appear here.</h2><p>Contact the school office to confirm current term dates, holidays and event times.</p></div>}<p className="note">Published calendar entries may change. Families should confirm details with the school.</p></InfoPage>}

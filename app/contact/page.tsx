@@ -1,0 +1,5 @@
+import { InfoPage, schoolDescription } from "../content";
+import type { Metadata } from "next";
+import { getSchoolIdentity } from "../../lib/school";
+export const metadata: Metadata = { title: "Contact" };
+export default async function Contact(){const school=await getSchoolIdentity();return <InfoPage label="CONTACT SLA" title="Let’s start a conversation." text={schoolDescription}><h2>Visit or contact the school</h2><p>For admissions, school visits or general questions, contact {school.school_name} directly.</p><div className="contact-box"><span className="eyebrow">SCHOOL LOCATION</span><h3>{school.address||school.country}</h3>{school.phone&&<p>Telephone: <a href={`tel:${school.phone}`}>{school.phone}</a></p>}{school.email&&<p>Email: <a href={`mailto:${school.email}`}>{school.email}</a></p>}{!school.phone&&!school.email&&<p>Verified school phone and email details will appear here when added by an administrator.</p>}</div><p>For admissions, use the <a className="text-link" href="/admissions">admissions page</a> and contact the school office to confirm current requirements.</p></InfoPage>}

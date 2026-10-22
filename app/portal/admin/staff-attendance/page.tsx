@@ -1,0 +1,19 @@
+import {requirePermission} from "../../../../lib/supabase/admin";
+import {PortalFrame} from "../../portal-frame";
+import {saveStaffAttendance} from "./actions";
+import {schoolToday} from "../../../../lib/school-time";
+export default async function StaffAttendance({searchParams}:{searchParams:Promise<{school_day?:string;saved?:string;error?:string}>}) {
+  const {supabase,profile}=await requirePermission("staff_attendance.manage"); const params=await searchParams;
+  const today=schoolToday();const date=params.school_day||today;const valid=/^\d{4}-\d\d-\d\d$/.test(date)&&!Number.isNaN(Date.parse(`${date}T00:00:00Z`))&&new Date(`${date}T00:00:00Z`).toISOString().slice(0,10)===date&&date<=today;
+  const [{data:staff,error},{data:entries}]=await Promise.all([
+    supabase.from("teacher_profiles").select("profile_id,staff_number,profile:profiles!teacher_profiles_profile_id_fkey(display_name)").eq("employment_status","active").order("staff_number").limit(500),
+    valid?supabase.from("staff_attendance").select("profile_id,status,note").eq("school_day",date):Promise.resolve({data:null}),
+  ]);
+  const statusByProfile=new Map((entries||[]).map(item=>[item.profile_id,item]));
+  const messages:Record<string,string>={invalid:"Select a valid date no later than today.",load:"Staff records could not be loaded. Confirm migration 005 is applied.",empty:"No active teacher profiles are available to mark.",save:"Staff attendance could not be saved."};
+  return <PortalFrame title="Staff Attendance" name={profile.display_name||"Administrator"} role={profile.role.replaceAll("_"," ")}>
+    {params.error&&<p role="alert" className="form-error">{messages[params.error]||"Unable to save attendance."}</p>}{params.saved&&<p role="status" className="form-success">Staff attendance saved for {date}.</p>}{error&&<p role="alert" className="form-error">{messages.load}</p>}
+    <form method="get" className="attendance-filters"><label>School date<input type="date" name="school_day" max={today} defaultValue={date}/></label><button className="button button-gold">Load date</button></form>
+    {!valid?<p role="alert" className="form-error">{messages.invalid}</p>:!staff?.length?<div className="portal-empty"><h2>No active teachers</h2><p>Create active teacher profiles before recording staff attendance.</p></div>:<><div className="attendance-summary"><b>Attendance summary</b><span>{staff.length} active teachers</span><span>{entries?.filter(x=>x.status==="present").length||0} present</span><span>{entries?.filter(x=>x.status==="absent").length||0} absent</span><span>{entries?.filter(x=>x.status==="late").length||0} late</span></div><form action={saveStaffAttendance} className="attendance-form"><input type="hidden" name="school_day" value={date}/><div className="table-wrap"><table className="data-table"><thead><tr><th>Staff ID</th><th>Teacher</th><th>Status</th><th>Note</th></tr></thead><tbody>{staff.map(person=>{const p=Array.isArray(person.profile)?person.profile[0]:person.profile as {display_name?:string}|null;const existing=statusByProfile.get(person.profile_id);return <tr key={person.profile_id}><td>{person.staff_number}</td><td>{p?.display_name||"Teacher"}</td><td><label className="sr-only" htmlFor={`staff-${person.profile_id}`}>Attendance status for {p?.display_name||person.staff_number}</label><select id={`staff-${person.profile_id}`} name={`status_${person.profile_id}`} defaultValue={existing?.status||"present"}><option value="present">Present</option><option value="absent">Absent</option><option value="late">Late</option><option value="excused">Excused</option></select></td><td><input name={`note_${person.profile_id}`} maxLength={300} defaultValue={existing?.note||""} aria-label={`Staff note for ${p?.display_name||person.staff_number}`}/></td></tr>})}</tbody></table></div><button className="button button-gold">Save staff attendance</button></form></>}
+  </PortalFrame>;
+}

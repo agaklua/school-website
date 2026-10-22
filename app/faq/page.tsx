@@ -1,0 +1,6 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { InfoPage } from "../content";
+export const metadata:Metadata={title:"Frequently asked questions"};
+const faqs=[["Which school levels are offered?","St. Lawrence Academy provides baby class, kindergarten, primary and secondary education. Contact the school to confirm current class availability."],["How do I apply?","Submit an enquiry or application through the admissions page. The school will contact you about requirements and next steps."],["What are the school fees?","Request the current fee schedule from the school office. Fees have not been published here."],["Is boarding available?","Contact the school to confirm current boarding availability, arrangements and costs."],["Where is the school?","St. Lawrence Academy is in South Sudan. Please contact the school office for directions and visiting hours."]];
+export default function FAQ(){return <InfoPage label="HELP FOR FAMILIES" title="Frequently asked questions." text="Quick answers to common questions from families.">{faqs.map(([q,a])=><details className="faq-item" key={q}><summary>{q}</summary><p>{a}</p></details>)}<p>Still need help? <Link className="text-link" href="/contact">Contact the school ↗</Link></p></InfoPage>}

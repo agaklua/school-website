@@ -1,0 +1,5 @@
+"use client";
+import {useActionState} from "react";
+import {lookupAdmissionStatus,type StatusState} from "./status-action";
+const initial:StatusState={};
+export function StatusForm(){const[state,action,pending]=useActionState(lookupAdmissionStatus,initial);return <form className="status-form" action={action}><label>Application reference<input name="reference_code" required autoComplete="off" placeholder="SLA-XXXXXXXXXXXXXXXX"/></label><label>Private access code<input name="access_code" required type="password" autoComplete="off" minLength={32} maxLength={32}/></label><button className="button button-red" disabled={pending}>{pending?<><span className="spinner" aria-hidden="true"/> Checking…</>:"Check status"}</button>{state.error&&<p className="form-error" role="alert">{state.error}</p>}{state.result&&<div className="status-result" role="status" aria-live="polite"><span className="eyebrow">{state.result.reference}</span><h3>Status: {state.result.status.replaceAll("_"," ")}</h3><p>Submitted {new Date(state.result.submitted_at).toLocaleDateString("en-GB")}. The school will contact the parent or guardian using the details supplied.</p></div>}</form>}

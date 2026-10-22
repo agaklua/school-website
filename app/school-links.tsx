@@ -1,0 +1,3 @@
+import Link from "next/link";
+const links=[["About the School","/about"],["School History","/history"],["School Leadership","/leadership"],["Baby Class","/baby-class"],["Kindergarten","/kindergarten"],["Primary School","/primary"],["Secondary School","/secondary"],["Boarding Facilities","/boarding"],["Admission Requirements","/admission-requirements"],["School Fees","/fees"],["School Calendar","/calendar"],["Gallery","/gallery"],["Frequently Asked Questions","/faq"],["Privacy Policy","/privacy"],["Terms of Use","/terms"]] as const;
+export function SchoolLinks(){return <div className="school-link-grid">{links.map(([title,href])=><Link key={href} href={href}><span>{title}</span><b aria-hidden="true">↗</b></Link>)}</div>}

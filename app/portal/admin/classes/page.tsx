@@ -1,0 +1,14 @@
+import {requirePermission} from "../../../../lib/supabase/admin";
+import {PortalFrame} from "../../portal-frame";
+import {createClass} from "./actions";
+const levels:Record<string,string>={baby_class:"Baby class",kindergarten:"Kindergarten",primary:"Primary",secondary:"Secondary"};
+export default async function Classes({searchParams}:{searchParams:Promise<{error?:string;saved?:string}>}) {
+  const {supabase,profile}=await requirePermission("academics.manage");
+  const [{data:years},{data:classes,error},params]=await Promise.all([supabase.from("academic_years").select("id,name,active").order("starts_on",{ascending:false}),supabase.from("school_classes").select("id,name,school_level,capacity,academic_years(name)").order("school_level").order("name"),searchParams]);
+  const errors:Record<string,string>={invalid:"Enter a class name, school level, academic year and valid capacity.",duplicate:"A class with that name already exists for the selected year.",save:"Class could not be saved."};
+  return <PortalFrame title="Class Management" name={profile.display_name||"School staff"} role={profile.role.replaceAll("_"," ")}>
+    {params.error&&<p role="alert" className="form-error">{errors[params.error]||"Unable to save."}</p>}{params.saved&&<p role="status" className="form-success">Class created successfully.</p>}{error&&<p role="alert" className="form-error">Could not load classes. Confirm migration 004 is applied.</p>}
+    <div className="dashboard-columns"><section className="dashboard-panel"><h2>Classes</h2>{classes?.length?classes.map(item=><div className="dashboard-row" key={item.id}><span><b>{item.name}</b><br/>{levels[item.school_level]} · {Array.isArray(item.academic_years)?item.academic_years[0]?.name??"":(item.academic_years as {name?:string}|null)?.name??""}</span><small>Capacity {item.capacity||"—"}</small></div>):<p className="empty-state">No classes yet. Create classes to assign students.</p>}</section>
+    <section className="dashboard-panel"><h2>Add class</h2>{!years?.length?<p className="empty-state">Create an academic year first.</p>:<form action={createClass} className="student-form"><label>Class name<input name="name" required maxLength={80} placeholder="Primary 1A"/></label><label>School level<select name="school_level" required defaultValue=""><option value="" disabled>Select level</option>{Object.entries(levels).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select></label><label>Academic year<select name="academic_year_id" required defaultValue={years.find(y=>y.active)?.id??years[0].id}>{years.map(y=><option value={y.id} key={y.id}>{y.name}{y.active?" · active":""}</option>)}</select></label><label>Capacity<input name="capacity" type="number" min="0" max="5000" defaultValue="0"/></label><button className="button button-gold">Save class</button></form>}</section></div>
+  </PortalFrame>;
+}

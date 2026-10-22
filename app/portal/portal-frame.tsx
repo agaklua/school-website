@@ -1,0 +1,5 @@
+import Link from "next/link";
+import { signOut } from "./actions";
+export function PortalFrame({ title, name, role, children }: { title: string; name: string; role: string; children: React.ReactNode }) {
+  return <main className="portal-shell"><aside className="portal-sidebar"><Link href="/" className="portal-brand">SLA <small>PORTAL</small></Link><span className="portal-role">{role}</span><nav><Link href={role.includes("Administrator") ? "/portal/admin" : "/portal"}>Overview</Link><Link href="/portal">My account</Link><Link href="/contact">Help & contact</Link></nav><form action={signOut}><button className="signout" type="submit">Sign out ↗</button></form></aside><section className="portal-main"><div className="portal-top"><span>St. Lawrence Academy</span><span>{name}</span></div><div className="portal-content"><span className="eyebrow">{role.toUpperCase()}</span><h1>{title}</h1><p className="portal-welcome">Welcome, {name}. Your school portal is ready.</p>{children}</div></section></main>;
+}

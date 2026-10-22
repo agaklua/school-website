@@ -1,0 +1,4 @@
+import type { Metadata } from "next";
+import { InfoPage } from "../content";
+export const metadata:Metadata={title:"Terms of use"};
+export default function Terms(){return <InfoPage label="SCHOOL INFORMATION" title="Terms of use." text="Guidance for using the St. Lawrence Academy website."><h2>Website information</h2><p>School information on this site is provided for families and visitors. Admission availability, requirements, fees, term dates and arrangements should be confirmed with the school.</p><h2>Applications</h2><p>Submitting an enquiry or application does not guarantee a place or complete student enrolment. The school will communicate the next steps directly to the parent or guardian.</p><p className="note">This draft needs review and approval by the school before production publication.</p></InfoPage>}
