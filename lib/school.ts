@@ -23,6 +23,6 @@ export async function getSchoolIdentity(): Promise<SchoolIdentity> {
   const supabase = await createClient();
   if (!supabase) return defaultIdentity;
   const { data } = await supabase.from("school_settings").select("school_name,acronym,motto,country,address,phone,email,logo_url,primary_color,accent_color").eq("id", 1).maybeSingle();
-  const saved = data || {};
+  const saved: Partial<SchoolIdentity> = data ?? {};
   return { ...defaultIdentity, ...saved, phone: saved.phone || defaultIdentity.phone, email: saved.email || defaultIdentity.email };
 }
